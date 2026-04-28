@@ -1,20 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { IonicModule } from '@ionic/angular';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/services/auth';
 
 @Component({
   selector: 'app-login',
-  templateUrl: './login.page.html',
-  styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, IonicModule,RouterModule],
+  templateUrl: './login.page.html'
 })
-export class LoginPage implements OnInit {
+export class LoginPage {
+  email = '';
+  password = '';
+  loading = false;
+  error = '';
 
-  constructor() { }
+  constructor(private auth: AuthService, private router: Router) {}
 
-  ngOnInit() {
+  async login() {
+    this.loading = true;
+    this.error = '';
+    try {
+      await this.auth.login(this.email, this.password);
+      this.router.navigate(['/home']);
+    } catch (e: any) {
+      this.error = e.message;
+    } finally {
+      this.loading = false;
+    }
   }
-
 }

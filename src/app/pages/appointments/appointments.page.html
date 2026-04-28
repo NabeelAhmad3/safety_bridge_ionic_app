@@ -1,13 +1,46 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>appointments</ion-title>
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Book Appointment</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">appointments</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+
+  <!-- BOOKING FORM -->
+  <ion-card *ngIf="specialist">
+    <ion-card-header>
+      <ion-card-title>{{ specialist.name }}</ion-card-title>
+      <ion-card-subtitle>{{ specialist.role | titlecase }}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">Date</ion-label>
+        <ion-input [(ngModel)]="date" type="date"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label position="floating">Time</ion-label>
+        <ion-input [(ngModel)]="time" type="time"></ion-input>
+      </ion-item>
+      <ion-button expand="block" class="ion-margin-top" (click)="book()" [disabled]="loading">
+        {{ loading ? 'Booking...' : 'Confirm Appointment' }}
+      </ion-button>
+      <ion-text color="success" *ngIf="success">
+        <p>✅ Appointment booked successfully!</p>
+      </ion-text>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- MY APPOINTMENTS -->
+  <h3 class="ion-padding">My Appointments</h3>
+  <ion-card *ngFor="let appt of appointments">
+    <ion-card-content>
+      <p><strong>Doctor:</strong> {{ appt.doctorName }}</p>
+      <p><strong>Date:</strong> {{ appt.date }}</p>
+      <p><strong>Time:</strong> {{ appt.time }}</p>
+      <ion-badge [color]="appt.status === 'pending' ? 'warning' : 'success'">
+        {{ appt.status | titlecase }}
+      </ion-badge>
+    </ion-card-content>
+  </ion-card>
+
 </ion-content>

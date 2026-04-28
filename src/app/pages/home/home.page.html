@@ -1,13 +1,104 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>home</ion-title>
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Safety Bridge</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/profile">
+        <ion-icon slot="icon-only" name="person-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">home</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+
+  <!-- ── WELCOME BANNER ───────────────────────── -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h2>Hello, {{ profile?.name?.split(' ')[0] || 'User' }} 👋</h2>
+      <p>How are you feeling today?</p>
+    </div>
+    <ion-icon name="medkit" class="banner-icon"></ion-icon>
+  </div>
+
+  <!-- ── STATS CARDS ──────────────────────────── -->
+  <div class="stats-row ion-padding-horizontal">
+
+    <div class="stat-card pending">
+      <ion-icon name="time-outline"></ion-icon>
+      <h3>{{ pendingCount }}</h3>
+      <p>Pending</p>
+    </div>
+
+    <div class="stat-card completed">
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <h3>{{ completedCount }}</h3>
+      <p>Completed</p>
+    </div>
+
+    <div class="stat-card upcoming">
+      <ion-icon name="calendar-outline"></ion-icon>
+      <h3>{{ upcomingCount }}</h3>
+      <p>Upcoming</p>
+    </div>
+
+  </div>
+
+  <!-- ── QUICK ACTIONS ────────────────────────── -->
+  <div class="section-title ion-padding-horizontal">Quick Actions</div>
+  <div class="quick-actions ion-padding-horizontal">
+    <div
+      class="action-card"
+      *ngFor="let action of quickActions"
+      [routerLink]="action.route"
+    >
+      <div class="action-icon" [class]="'bg-' + action.color">
+        <ion-icon [name]="action.icon"></ion-icon>
+      </div>
+      <p>{{ action.title }}</p>
+    </div>
+  </div>
+
+  <!-- ── RECENT APPOINTMENTS ──────────────────── -->
+  <div class="section-title ion-padding-horizontal">Recent Appointments</div>
+
+  <div class="ion-padding-horizontal" *ngIf="appointments.length === 0">
+    <ion-card>
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="calendar-outline" style="font-size:40px; color:#ccc"></ion-icon>
+        <p>No appointments yet. Book one now!</p>
+        <ion-button size="small" routerLink="/doctors">Find a Doctor</ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div class="ion-padding-horizontal">
+    <ion-card class="appt-card" *ngFor="let appt of appointments">
+      <ion-card-content>
+        <div class="appt-row">
+          <div>
+            <ion-icon name="person-circle" class="appt-avatar"></ion-icon>
+          </div>
+          <div class="appt-info">
+            <h4>{{ appt.doctorName }}</h4>
+            <p>{{ appt.type | titlecase }}</p>
+            <p>📅 {{ appt.date }} &nbsp; ⏰ {{ appt.time }}</p>
+          </div>
+          <ion-badge [color]="appt.status === 'pending' ? 'warning' : 'success'">
+            {{ appt.status | titlecase }}
+          </ion-badge>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- ── HEALTH TIPS ───────────────────────────── -->
+  <div class="section-title ion-padding-horizontal">Health Tips</div>
+  <div class="tips-scroll ion-padding-horizontal">
+    <div class="tip-card" *ngFor="let h of healthTips">
+      {{ h.tip }}
+    </div>
+  </div>
+
+  <div style="height: 30px"></div>
+
 </ion-content>

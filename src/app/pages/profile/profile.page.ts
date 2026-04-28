@@ -1,20 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
+import { IonicModule } from '@ionic/angular';
+import { AuthService } from '../../services/services/auth';
+import { Auth } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-profile',
-  templateUrl: './profile.page.html',
-  styleUrls: ['./profile.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [CommonModule, IonicModule],
+  templateUrl: './profile.page.html'
 })
 export class ProfilePage implements OnInit {
+  profile: any = null;
 
-  constructor() { }
+  constructor(private auth: Auth, private authService: AuthService) {}
 
   ngOnInit() {
+    this.auth.onAuthStateChanged(async user => {
+      if (user) {
+        this.profile = await this.authService.getUserProfile(user.uid);
+      }
+    });
   }
 
+  logout() {
+    this.authService.logout();
+  }
 }

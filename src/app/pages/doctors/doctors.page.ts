@@ -1,20 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IonicModule } from '@ionic/angular';
+import { FirestoreService } from '../../services/services/firestore';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-doctors',
-  templateUrl: './doctors.page.html',
-  styleUrls: ['./doctors.page.scss'],
   standalone: true,
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [CommonModule, IonicModule,FormsModule],
+  templateUrl: './doctors.page.html'
 })
 export class DoctorsPage implements OnInit {
+  doctors: any[] = [];
+  physiotherapists: any[] = [];
+  segment = 'doctors';
 
-  constructor() { }
+  constructor(private fs: FirestoreService, private router: Router) {}
 
   ngOnInit() {
+    this.fs.getDoctors().subscribe(d => this.doctors = d);
+    this.fs.getPhysiotherapists().subscribe(p => this.physiotherapists = p);
   }
 
+  bookAppointment(specialist: any) {
+    this.router.navigate(['/appointments'], { state: { specialist } });
+  }
 }

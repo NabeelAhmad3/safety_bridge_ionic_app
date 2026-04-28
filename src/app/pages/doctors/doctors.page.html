@@ -1,13 +1,38 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>doctors</ion-title>
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Find Specialists</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">doctors</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <ion-segment [(ngModel)]="segment">
+    <ion-segment-button value="doctors">Doctors</ion-segment-button>
+    <ion-segment-button value="physio">Physiotherapists</ion-segment-button>
+  </ion-segment>
+
+  <ion-list *ngIf="segment === 'doctors'">
+    <ion-item *ngFor="let doc of doctors">
+      <ion-avatar slot="start">
+        <ion-icon name="person-circle" size="large"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ doc.name }}</h2>
+        <p>{{ doc.specialization || 'General Physician' }}</p>
+      </ion-label>
+      <ion-button slot="end" (click)="bookAppointment(doc)">Book</ion-button>
+    </ion-item>
+  </ion-list>
+
+  <ion-list *ngIf="segment === 'physio'">
+    <ion-item *ngFor="let p of physiotherapists">
+      <ion-avatar slot="start">
+        <ion-icon name="person-circle" size="large"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ p.name }}</h2>
+        <p>Physiotherapist</p>
+      </ion-label>
+      <ion-button slot="end" (click)="bookAppointment(p)">Book</ion-button>
+    </ion-item>
+  </ion-list>
 </ion-content>

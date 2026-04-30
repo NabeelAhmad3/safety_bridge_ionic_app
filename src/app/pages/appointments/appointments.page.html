@@ -2,7 +2,9 @@
   <ion-toolbar color="primary">
     <ion-title>
       <span *ngIf="userProfile?.role === 'admin'">All Appointments</span>
-      <span *ngIf="userProfile?.role === 'doctor' || userProfile?.role === 'physiotherapist'">My Patient Appointments</span>
+      <span *ngIf="userProfile?.role === 'doctor' ||
+                   userProfile?.role === 'physiotherapist' ||
+                   userProfile?.role === 'nurse'">My Patient Appointments</span>
       <span *ngIf="userProfile?.role === 'patient'">My Appointments</span>
     </ion-title>
   </ion-toolbar>
@@ -10,38 +12,61 @@
 
 <ion-content class="ion-padding">
 
-  <!-- BOOKING FORM -->
   <ion-card *ngIf="specialist">
     <ion-card-header>
       <ion-card-title>Book with {{ specialist.name }}</ion-card-title>
       <ion-card-subtitle>{{ specialist.role | titlecase }}</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>
+
       <ion-item>
         <ion-label position="floating">Select Date</ion-label>
-        <ion-input [(ngModel)]="date" type="date"></ion-input>
+        <ion-input [(ngModel)]="date" type="date" (ionChange)="onDateTimeChange()">
+        </ion-input>
       </ion-item>
+
       <ion-item>
         <ion-label position="floating">Select Time</ion-label>
-        <ion-input [(ngModel)]="time" type="time"></ion-input>
+        <ion-input [(ngModel)]="time" type="time" (ionChange)="onDateTimeChange()">
+        </ion-input>
       </ion-item>
-      <ion-button expand="block" class="ion-margin-top" (click)="book()" [disabled]="loading">
+
+      <div *ngIf="checkingConflict" style="text-align:center; padding: 8px">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p style="color:gray; font-size:13px; margin:4px 0">Checking availability...</p>
+      </div>
+
+      <ion-card *ngIf="conflictMessage" color="danger" style="margin-top:12px">
+        <ion-card-content>
+          <p style="color:white; margin:0">{{ conflictMessage }}</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-button expand="block" class="ion-margin-top" (click)="book()"
+        [disabled]="loading || checkingConflict || !!conflictMessage">
+        <ion-spinner *ngIf="loading" name="crescent" slot="start"></ion-spinner>
         {{ loading ? 'Booking...' : 'Confirm Appointment' }}
       </ion-button>
+
       <ion-text color="success" *ngIf="success">
         <p class="ion-text-center">✅ Appointment booked successfully!</p>
       </ion-text>
+
     </ion-card-content>
   </ion-card>
 
   <div class="filter-chips">
-    <ion-chip [color]="filterStatus === 'all'       ? 'primary' : 'medium'" (click)="filterStatus = 'all'">All</ion-chip>
-    <ion-chip [color]="filterStatus === 'pending'   ? 'warning' : 'medium'" (click)="filterStatus = 'pending'">Pending</ion-chip>
-    <ion-chip [color]="filterStatus === 'confirmed' ? 'primary' : 'medium'" (click)="filterStatus = 'confirmed'">Confirmed</ion-chip>
-    <ion-chip [color]="filterStatus === 'completed' ? 'success' : 'medium'" (click)="filterStatus = 'completed'">Completed</ion-chip>
-    <ion-chip [color]="filterStatus === 'cancelled' ? 'danger'  : 'medium'" (click)="filterStatus = 'cancelled'">Cancelled</ion-chip>
+    <ion-chip [color]="filterStatus === 'all'       ? 'primary' : 'medium'"
+      (click)="filterStatus = 'all'">All</ion-chip>
+    <ion-chip [color]="filterStatus === 'pending'   ? 'warning' : 'medium'"
+      (click)="filterStatus = 'pending'">Pending</ion-chip>
+    <ion-chip [color]="filterStatus === 'confirmed' ? 'primary' : 'medium'"
+      (click)="filterStatus = 'confirmed'">Confirmed</ion-chip>
+    <ion-chip [color]="filterStatus === 'completed' ? 'success' : 'medium'"
+      (click)="filterStatus = 'completed'">Completed</ion-chip>
+    <ion-chip [color]="filterStatus === 'cancelled' ? 'danger'  : 'medium'"
+      (click)="filterStatus = 'cancelled'">Cancelled</ion-chip>
   </div>
-
 
   <div class="ion-text-center ion-padding" *ngIf="filteredAppointments.length === 0">
     <ion-icon name="calendar-outline" style="font-size: 60px; color: #ccc"></ion-icon>
@@ -53,7 +78,7 @@
       <div class="appt-header">
         <ion-icon name="person-circle" class="appt-avatar"></ion-icon>
         <div class="appt-info">
-          <h4 *ngIf="userProfile?.role === 'patient'">Dr. {{ appt.doctorName }}</h4>
+          <h4 *ngIf="userProfile?.role === 'patient'">{{ appt.doctorName }}</h4>
           <h4 *ngIf="userProfile?.role !== 'patient'">{{ appt.patientName }}</h4>
           <p>{{ appt.type | titlecase }}</p>
         </div>
@@ -61,25 +86,27 @@
           {{ appt.status | titlecase }}
         </ion-badge>
       </div>
+
       <div class="appt-details">
         <span><ion-icon name="calendar-outline"></ion-icon> {{ appt.date }}</span>
         <span><ion-icon name="time-outline"></ion-icon> {{ appt.time }}</span>
       </div>
+
       <div *ngIf="userProfile?.role === 'admin'" class="admin-info">
         <p><strong>Patient:</strong> {{ appt.patientName }}</p>
         <p><strong>Doctor:</strong> {{ appt.doctorName }}</p>
       </div>
-      <div class="action-buttons"
-           *ngIf="userProfile?.role === 'doctor' ||
-                  userProfile?.role === 'physiotherapist' ||
+
+      <div class="action-buttons" *ngIf="userProfile?.role === 'doctor'          ||
+                  userProfile?.role === 'physiotherapist'  ||
+                  userProfile?.role === 'nurse'            ||
                   userProfile?.role === 'admin'">
-        <ion-button size="small" color="primary"
-          *ngIf="appt.status === 'pending'"
+        <ion-button size="small" color="primary" *ngIf="appt.status === 'pending'"
           (click)="updateStatus(appt.id, 'confirmed')">
           Confirm
         </ion-button>
         <ion-button size="small" color="success"
-          *ngIf="appt.status === 'confirmed'"
+         *ngIf="appt.status === 'confirmed'"
           (click)="updateStatus(appt.id, 'completed')">
           Complete
         </ion-button>

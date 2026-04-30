@@ -22,12 +22,13 @@ export class AdminPage implements OnInit {
   selectedStatus = '';
   adminRole = 'admin';
   adminProfile: any = null;
+  nurses: any[] = [];
 
   get totalAppointments() { return this.allAppointments.length; }
   get pendingCount() { return this.allAppointments.filter(a => a.status === 'pending').length; }
   get confirmedCount() { return this.allAppointments.filter(a => a.status === 'confirmed').length; }
   get completedCount() { return this.allAppointments.filter(a => a.status === 'completed').length; }
-  get allStaff() { return [...this.doctors, ...this.physiotherapists]; }
+  get allStaff() { return [...this.doctors, ...this.physiotherapists, ...this.nurses]; }
 
   constructor(private fs: FirestoreService, private authService: AuthService) { }
 
@@ -44,6 +45,7 @@ export class AdminPage implements OnInit {
     this.fs.getUsersByRole('patient').subscribe(p => this.patients = p);
     this.fs.getUsersByRole('doctor').subscribe(d => this.doctors = d);
     this.fs.getUsersByRole('physiotherapist').subscribe(p => this.physiotherapists = p);
+    this.fs.getUsersByRole('nurse').subscribe(n => this.nurses = n)
   }
 
   openEdit(appt: any) {
@@ -105,8 +107,22 @@ export class AdminPage implements OnInit {
     }
   }
 
+  getRoleIcon(role: string) {
+    switch (role) {
+      case 'doctor': return 'medkit';
+      case 'physiotherapist': return 'fitness';
+      case 'nurse': return 'heart-circle';
+      default: return 'person-circle';
+    }
+  }
+
   getRoleColor(role: string) {
-    return role === 'doctor' ? 'tertiary' : 'secondary';
+    switch (role) {
+      case 'doctor': return 'tertiary';
+      case 'physiotherapist': return 'secondary';
+      case 'nurse': return 'success';
+      default: return 'medium';
+    }
   }
   async logout() {
     await this.authService.logout();

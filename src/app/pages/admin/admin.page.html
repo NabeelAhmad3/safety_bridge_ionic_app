@@ -32,7 +32,7 @@
   <ion-segment [(ngModel)]="segment">
     <ion-segment-button value="appointments">Appointments</ion-segment-button>
     <ion-segment-button value="patients">Patients</ion-segment-button>
-    <ion-segment-button value="staff">Doctors & Physio</ion-segment-button>
+    <ion-segment-button value="staff">Medical Specialist</ion-segment-button>
     <ion-segment-button value="profile">Profile</ion-segment-button>
   </ion-segment>
 
@@ -90,22 +90,21 @@
 
   <div *ngIf="segment === 'staff'">
     <p style="color:gray;font-size:13px;margin:8px 0">
-      {{ doctors.length }} doctors · {{ physiotherapists.length }} physiotherapists
+      {{ doctors.length }} doctors · {{ physiotherapists.length }} physiotherapists {{ nurses.length }} nurses
     </p>
     <ion-card *ngFor="let d of allStaff" class="ion-margin-top">
       <ion-card-content>
         <div class="user-row">
-          <ion-icon [name]="d.role === 'doctor' ? 'medkit' : 'fitness'" class="user-avatar">
-          </ion-icon>
-          <div class="user-info">
-            <h4>{{ d.name }}</h4>
-            <p>{{ d.email }}</p>
-            <p *ngIf="d.phone">📞 {{ d.phone }}</p>
-            <p *ngIf="d.specialization">🩺 {{ d.specialization }}</p>
-            <ion-badge [color]="getRoleColor(d.role)">
-              {{ d.role | titlecase }}
-            </ion-badge>
-          </div>
+        <ion-icon [name]="getRoleIcon(d.role)" class="user-avatar"></ion-icon>
+        <div class="user-info">
+          <h4>{{ d.name }}</h4>
+          <p>{{ d.email }}</p>
+          <p *ngIf="d.phone">📞 {{ d.phone }}</p>
+          <p *ngIf="d.specialization">🩺 {{ d.specialization }}</p>
+          <ion-badge [color]="getRoleColor(d.role)">
+            {{ d.role | titlecase }}
+          </ion-badge>
+        </div>
           <ion-button size="small" color="danger" fill="outline" (click)="deleteUser(d.uid || d.id)">
             <ion-icon name="trash-outline"></ion-icon>
           </ion-button>

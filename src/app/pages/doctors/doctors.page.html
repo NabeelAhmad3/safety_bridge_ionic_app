@@ -8,6 +8,7 @@
   <ion-segment [(ngModel)]="segment">
     <ion-segment-button value="doctors">Doctors</ion-segment-button>
     <ion-segment-button value="physio">Physiotherapists</ion-segment-button>
+     <ion-segment-button value="nurses">Nurses</ion-segment-button>
   </ion-segment>
 
   <ion-list *ngIf="segment === 'doctors'">
@@ -33,6 +34,19 @@
         <p>Physiotherapist</p>
       </ion-label>
       <ion-button slot="end" (click)="bookAppointment(p)">Book</ion-button>
+    </ion-item>
+  </ion-list>
+
+  <ion-list *ngIf="segment === 'nurses'">
+    <ion-item *ngFor="let n of nurses">
+      <ion-avatar slot="start">
+        <ion-icon name="person-circle" size="large"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ n.name }}</h2>
+        <p>Nurses</p>
+      </ion-label>
+      <ion-button slot="end" (click)="bookAppointment(n)">Book</ion-button>
     </ion-item>
   </ion-list>
 </ion-content>

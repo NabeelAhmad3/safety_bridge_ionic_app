@@ -19,7 +19,14 @@ import {
   calendar,
   shieldCheckmark,
   statsChart,
-  people
+  people,
+  searchOutline,
+  personCircleOutline,
+  logInOutline,
+  logOutOutline,
+  heartCircle,
+  mailOutline,
+  personOutline
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -51,5 +58,11 @@ addIcons({
 'calendar':calendar,
 'shield-checkmark': shieldCheckmark,
 'stats-chart': statsChart,
-'people': people
+'people': people,
+'search-outline':searchOutline,
+'person-circle-outline':personCircleOutline,
+'log-out-outline':logOutOutline,
+'heart-circle':heartCircle,
+'mail-outline':mailOutline,
+'person-outline':personOutline,
 });

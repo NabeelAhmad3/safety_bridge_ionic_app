@@ -8,19 +8,23 @@
   <div class="ion-text-center ion-padding">
     <ion-icon name="person-circle" style="font-size: 80px; color: var(--ion-color-primary)"></ion-icon>
     <h2>{{ profile.name }}</h2>
-    <p>{{ profile.email }}</p>
     <ion-badge color="primary">{{ profile.role | titlecase }}</ion-badge>
   </div>
 
   <ion-list>
     <ion-item>
-      <ion-label><strong>Name:</strong> {{ profile.name }}</ion-label>
+      <ion-icon name="mail-outline" slot="start" color="primary"></ion-icon>
+      <ion-label>
+        <p>Email</p>
+        <h3>{{ profile.email }}</h3>
+      </ion-label>
     </ion-item>
     <ion-item>
-      <ion-label><strong>Email:</strong> {{ profile.email }}</ion-label>
-    </ion-item>
-    <ion-item>
-      <ion-label><strong>Role:</strong> {{ profile.role | titlecase }}</ion-label>
+      <ion-icon name="person-outline" slot="start" color="primary"></ion-icon>
+      <ion-label>
+        <p>Role</p>
+        <h3>{{ profile.role }}</h3>
+      </ion-label>
     </ion-item>
   </ion-list>
 

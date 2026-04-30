@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, getDocs, deleteDoc } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -17,14 +17,19 @@ export class FirestoreService {
     return collectionData(q, { idField: 'id' });
   }
 
-  getDoctors(): Observable<any[]> {
-    return this.getUsersByRole('doctor');
+   getDoctors(): Observable<any[]> {
+    const ref = collection(this.firestore, 'users');
+    const q = query(ref, where('role', '==', 'doctor'));
+    return collectionData(q, { idField: 'id' }).pipe(
+      map((users: any[]) => users.map(u => ({ ...u, uid: u.uid || u.id })))
+    );
   }
-
   getPhysiotherapists(): Observable<any[]> {
     return this.getUsersByRole('physiotherapist');
   }
-
+  getNurses(): Observable<any[]> {
+    return this.getUsersByRole('nurse');
+  }
   bookAppointment(data: {
     patientId: string;
     patientName: string;
@@ -88,4 +93,39 @@ export class FirestoreService {
     const ref = doc(this.firestore, 'appointments', appointmentId);
     return updateDoc(ref, data);
   }
+async checkAppointmentConflict(doctorId: string, date: string, time: string): Promise<boolean> {
+  const ref = collection(this.firestore, 'appointments');
+  const q = query(ref,
+    where('doctorId', '==', doctorId),
+    where('date', '==', date),
+    where('status', '!=', 'cancelled')
+  );
+
+  const snapshot = await getDocs(q);
+
+  const [bookedHour, bookedMin] = time.split(':').map(Number);
+  const bookedTotalMins = bookedHour * 60 + bookedMin;
+
+  for (const docSnap of snapshot.docs) {
+    const data = docSnap.data();
+    const [existingHour, existingMin] = data['time'].split(':').map(Number);
+    const existingTotalMins = existingHour * 60 + existingMin;
+    const diff = Math.abs(bookedTotalMins - existingTotalMins);
+    if (diff < 20) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async getBookedSlots(doctorId: string, date: string, allSlots: string[]): Promise<string[]> {
+  const bookedSlots: string[] = [];
+  for (const slot of allSlots) {
+    const conflict = await this.checkAppointmentConflict(doctorId, date, slot);
+    if (conflict) {
+      bookedSlots.push(slot);
+    }
+  }
+  return bookedSlots;
+}
 }

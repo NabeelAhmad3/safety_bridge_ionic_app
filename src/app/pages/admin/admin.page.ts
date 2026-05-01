@@ -4,11 +4,12 @@ import { IonicModule } from '@ionic/angular';
 import { FirestoreService } from '../../services/services/firestore';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from 'src/app/services/services/auth';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, IonicModule, FormsModule],
+  imports: [CommonModule, IonicModule, FormsModule, RouterModule],
   templateUrl: './admin.page.html',
   styleUrls: ['./admin.page.scss']
 })

@@ -46,7 +46,6 @@ export class AuthService {
   async logout() {
     await signOut(this.auth);
     this.currentUserSubject.next(null);
-    this.router.navigate(['/welcome']);
   }
 
   async getUserProfile(uid: string) {

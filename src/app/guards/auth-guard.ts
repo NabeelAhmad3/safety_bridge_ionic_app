@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (route, state) => {
   const auth = inject(Auth);
   const router = inject(Router);
 
@@ -12,7 +12,9 @@ export const authGuard: CanActivateFn = () => {
       if (user) {
         resolve(true);
       } else {
-        router.navigate(['/welcome']);
+        router.navigate(['/welcome'], {
+          queryParams: { returnUrl: state.url }
+        });
         resolve(false);
       }
     });

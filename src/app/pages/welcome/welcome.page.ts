@@ -52,7 +52,9 @@ export class WelcomePage {
     this.showLoginNotice = true;
     setTimeout(() => {
       this.showLoginNotice = false;
-      this.router.navigate(['/login']);
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl: route }
+      });
     }, 1500);
   }
 }

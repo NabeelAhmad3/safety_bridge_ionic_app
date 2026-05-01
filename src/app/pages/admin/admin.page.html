@@ -1,6 +1,11 @@
 <ion-header>
   <ion-toolbar color="primary">
     <ion-title>🛡️ Admin Dashboard</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/profile">
+        <ion-icon slot="icon-only" name="person-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -10,17 +15,22 @@
     <div class="stat-card blue">
       <ion-icon name="stats-chart"></ion-icon>
       <h3>{{ totalAppointments }}</h3>
-      <p>Total</p>
+      <p>Total Appointments>
     </div>
-    <div class="stat-card orange">
+    <!-- <div class="stat-card orange">
       <ion-icon name="time-outline"></ion-icon>
       <h3>{{ pendingCount }}</h3>
       <p>Pending</p>
-    </div>
+    </div> -->
     <div class="stat-card green">
       <ion-icon name="checkmark-circle-outline"></ion-icon>
       <h3>{{ completedCount }}</h3>
-      <p>Completed</p>
+      <p>Completed Appointments</p>
+    </div>
+    <div class="stat-card orange">
+      <ion-icon name="medical"></ion-icon>
+      <h3>{{ allStaff.length }}</h3>
+      <p>Specialists</p>
     </div>
     <div class="stat-card purple">
       <ion-icon name="people"></ion-icon>
@@ -32,7 +42,7 @@
   <ion-segment [(ngModel)]="segment">
     <ion-segment-button value="appointments">Appointments</ion-segment-button>
     <ion-segment-button value="patients">Patients</ion-segment-button>
-    <ion-segment-button value="staff">Medical Specialist</ion-segment-button>
+    <ion-segment-button value="staff">Specialists</ion-segment-button>
     <ion-segment-button value="profile">Profile</ion-segment-button>
   </ion-segment>
 
@@ -95,16 +105,16 @@
     <ion-card *ngFor="let d of allStaff" class="ion-margin-top">
       <ion-card-content>
         <div class="user-row">
-        <ion-icon [name]="getRoleIcon(d.role)" class="user-avatar"></ion-icon>
-        <div class="user-info">
-          <h4>{{ d.name }}</h4>
-          <p>{{ d.email }}</p>
-          <p *ngIf="d.phone">📞 {{ d.phone }}</p>
-          <p *ngIf="d.specialization">🩺 {{ d.specialization }}</p>
-          <ion-badge [color]="getRoleColor(d.role)">
-            {{ d.role | titlecase }}
-          </ion-badge>
-        </div>
+          <ion-icon [name]="getRoleIcon(d.role)" class="user-avatar"></ion-icon>
+          <div class="user-info">
+            <h4>{{ d.name }}</h4>
+            <p>{{ d.email }}</p>
+            <p *ngIf="d.phone">📞 {{ d.phone }}</p>
+            <p *ngIf="d.specialization">🩺 {{ d.specialization }}</p>
+            <ion-badge [color]="getRoleColor(d.role)">
+              {{ d.role | titlecase }}
+            </ion-badge>
+          </div>
           <ion-button size="small" color="danger" fill="outline" (click)="deleteUser(d.uid || d.id)">
             <ion-icon name="trash-outline"></ion-icon>
           </ion-button>

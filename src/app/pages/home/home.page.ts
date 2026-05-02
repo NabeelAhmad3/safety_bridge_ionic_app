@@ -17,7 +17,7 @@ import { FormsModule } from '@angular/forms';
 export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('tipsContainer', { static: false }) tipsContainer!: ElementRef;
 
-private scrollInterval: any;
+  private scrollInterval: any;
   profile: any = null;
   appointments: any[] = [];
   confirmCount = 0;
@@ -28,11 +28,21 @@ private scrollInterval: any;
   allSpecialists: any[] = [];
   filteredSpecialists: any[] = [];
   isSearching = false;
+  recentLabTests: any[] = [];
+  labPendingCount = 0;
+  labProcessingCount = 0;
+  labCompletedCount = 0;
+  patientLabTests: any[] = [];
+  labPatientPendingCount = 0;
+  labPatientCompletedCount = 0;
+
 
   allQuickActions = [
     { title: 'Find Specialists', icon: 'medical', route: '/doctors', color: 'primary', roles: ['patient'] },
+    { title: 'Book Lab Test', icon: 'flask', route: '/lab', color: 'tertiary', roles: ['patient'] },
     { title: 'My Appointments', icon: 'calendar', route: '/appointments', color: 'success', roles: ['patient', 'doctor', 'physiotherapist', 'nurse'] },
-    { title: 'My Profile', icon: 'person-circle', route: '/profile', color: 'warning', roles: ['patient', 'doctor', 'physiotherapist', 'nurse'] },
+    { title: 'Lab Requests', icon: 'flask', route: '/lab', color: 'tertiary', roles: ['laboratory'] },
+    { title: 'My Profile', icon: 'person-circle', route: '/profile', color: 'warning', roles: ['patient', 'doctor', 'physiotherapist', 'nurse', 'laboratory'] },
   ];
 
   healthTips = [
@@ -48,41 +58,41 @@ private scrollInterval: any;
     private fs: FirestoreService,
     private router: Router
   ) { }
-ngAfterViewInit() {
-  this.startAutoScroll();
-}
-startAutoScroll() {
-  this.stopAutoScroll();
-  if (!this.tipsContainer) return;
+  ngAfterViewInit() {
+    this.startAutoScroll();
+  }
+  startAutoScroll() {
+    this.stopAutoScroll();
+    if (!this.tipsContainer) return;
 
-  const container = this.tipsContainer.nativeElement;
+    const container = this.tipsContainer.nativeElement;
 
-  this.scrollInterval = setInterval(() => {
+    this.scrollInterval = setInterval(() => {
 
-    container.scrollBy({
-      left: container.clientWidth, 
-      behavior: 'smooth'
-    });
-
-    if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 5) {
-      container.scrollTo({
-        left: 0,
+      container.scrollBy({
+        left: container.clientWidth,
         behavior: 'smooth'
       });
-    }
 
-  }, 3000);
-}
+      if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 5) {
+        container.scrollTo({
+          left: 0,
+          behavior: 'smooth'
+        });
+      }
 
-stopAutoScroll() {
-  if (this.scrollInterval) {
-    clearInterval(this.scrollInterval);
+    }, 3000);
   }
-}
 
-ngOnDestroy() {
-  this.stopAutoScroll();
-}
+  stopAutoScroll() {
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+    }
+  }
+
+  ngOnDestroy() {
+    this.stopAutoScroll();
+  }
   async ngOnInit() {
     this.auth.onAuthStateChanged(async user => {
       if (user) {
@@ -102,6 +112,40 @@ ngOnDestroy() {
         }
 
         const role = this.profile?.role;
+        if (this.profile?.role === 'patient') {
+          this.loadSpecialists();
+          this.fs.getPatientLabTests(user.uid).subscribe(tests => {
+            const sorted = [...tests].sort((a, b) => {
+              const dA = a.createdAt?.toDate?.() || new Date(0);
+              const dB = b.createdAt?.toDate?.() || new Date(0);
+              return dB.getTime() - dA.getTime();
+            });
+            this.patientLabTests = sorted.slice(0, 3);
+            this.labPatientPendingCount = tests.filter(t => t.status === 'pending').length;
+            this.labPatientCompletedCount = tests.filter(t => t.status === 'completed').length;
+          });
+        }
+        if (role === 'laboratory') {
+          this.fs.getAllLabTests().subscribe({
+            next: (tests) => {
+              const sorted = tests.sort((a, b) => {
+                const dA = a.createdAt?.toDate?.() || new Date(0);
+                const dB = b.createdAt?.toDate?.() || new Date(0);
+                return dB.getTime() - dA.getTime();
+              });
+              this.recentLabTests = sorted.slice(0, 3);
+              this.labPendingCount = sorted.filter(t => t.status === 'pending').length;
+              this.labProcessingCount = sorted.filter(t => t.status === 'processing').length;
+              this.labCompletedCount = sorted.filter(t => t.status === 'completed').length;
+
+            },
+            error: (err) => {
+              console.error('❌ Error loading lab tests:', err);
+            }
+          });
+          return;
+        }
+
         const appts$ = (role === 'doctor' || role === 'physiotherapist' || role === 'nurse')
           ? this.fs.getDoctorAppointments(user.uid)
           : this.fs.getPatientAppointments(user.uid);
@@ -178,13 +222,12 @@ ngOnDestroy() {
     }
   }
   getStatusColor(status: string) {
-  switch (status) {
-    case 'pending':   return 'warning';
-    case 'confirmed': return 'primary';
-    case 'completed': return 'success';
-    case 'cancelled': return 'danger';
-    default:          return 'medium';
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'confirmed': return 'primary';
+      case 'completed': return 'success';
+      case 'cancelled': return 'danger';
+      default: return 'medium';
+    }
   }
-}
-
 }

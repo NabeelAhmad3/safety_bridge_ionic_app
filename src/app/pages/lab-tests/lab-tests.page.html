@@ -1,0 +1,240 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <span *ngIf="userProfile?.role === 'patient'">My Lab Tests</span>
+      <span *ngIf="userProfile?.role === 'laboratory'">Lab Test Requests</span>
+      <span *ngIf="userProfile?.role === 'admin'">All Lab Tests</span>
+    </ion-title>
+    <ion-buttons slot="end" *ngIf="userProfile?.role === 'patient'">
+      <ion-button (click)="showBookingForm = !showBookingForm">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <ion-card color="success" *ngIf="bookingSuccess" class="booking-success-card">
+    <ion-card-content>
+      <p class="booking-success-text">Lab test booked successfully!</p>
+    </ion-card-content>
+  </ion-card>
+
+  <div *ngIf="userProfile?.role === 'patient'">
+
+    <ion-card *ngIf="showBookingForm">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="flask" color="primary"></ion-icon>
+          Book Lab Test
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-icon name="list-outline" slot="start" color="primary"></ion-icon>
+          <ion-label position="stacked">Select Test</ion-label>
+          <ion-select [(ngModel)]="selectedTest" interface="action-sheet" placeholder="Choose a test">
+            <ion-select-option *ngFor="let t of availableTests" [value]="t.name">
+              {{ t.name }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="calendar-outline" slot="start" color="primary"></ion-icon>
+          <ion-label position="stacked">Preferred Date</ion-label>
+          <ion-input type="date" [(ngModel)]="selectedDate" [min]="minDate"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="time-outline" slot="start" color="primary"></ion-icon>
+          <ion-label position="stacked">Preferred Time</ion-label>
+          <ion-input type="time" [(ngModel)]="selectedTime"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="document-text-outline" slot="start" color="primary"></ion-icon>
+          <ion-label position="stacked">Additional Notes (optional)</ion-label>
+          <ion-textarea [(ngModel)]="notes" rows="2" placeholder="Any symptoms or doctor referral info...">
+          </ion-textarea>
+        </ion-item>
+        <p class="booking-error" *ngIf="bookingError">{{ bookingError }}</p>
+        <ion-button expand="block" class="ion-margin-top"
+          [disabled]="!selectedTest || !selectedDate || !selectedTime || bookingLoading" (click)="bookTest()">
+          <ion-spinner *ngIf="bookingLoading" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!bookingLoading" name="flask" slot="start"></ion-icon>
+          {{ bookingLoading ? 'Booking...' : 'Book Test' }}
+        </ion-button>
+        <ion-button expand="block" fill="clear" color="medium" (click)="showBookingForm = false">
+          Cancel
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="!showBookingForm">
+      <div class="empty-state ion-text-center ion-padding">
+        <ion-icon name="flask-outline" class="empty-state-icon"></ion-icon>
+        <p class="empty-state-text"></p>
+        <ion-button size="small" (click)="showBookingForm = true">
+          Book a Test
+        </ion-button>
+      </div>
+
+      <div class="filter-chips">
+        <ion-chip [color]="filterStatus === 'all'        ? 'primary' : 'medium'"
+          (click)="filterStatus = 'all'">All</ion-chip>
+        <ion-chip [color]="filterStatus === 'pending'    ? 'warning' : 'medium'"
+          (click)="filterStatus = 'pending'">Pending</ion-chip>
+        <ion-chip [color]="filterStatus === 'processing' ? 'primary' : 'medium'"
+          (click)="filterStatus = 'processing'">Processing</ion-chip>
+        <ion-chip [color]="filterStatus === 'completed'  ? 'success' : 'medium'"
+          (click)="filterStatus = 'completed'">Completed</ion-chip>
+        <ion-chip [color]="filterStatus === 'cancelled'  ? 'danger'  : 'medium'"
+          (click)="filterStatus = 'cancelled'">Cancelled</ion-chip>
+      </div>
+
+      <ion-card *ngFor="let test of filteredAppointments" class="ion-margin-top">
+        <ion-card-content>
+          <div class="test-card-row">
+            <div class="test-card-info">
+              <ion-icon [name]="getTestIcon(test.testName)" class="test-icon" color="primary"></ion-icon>
+              <div>
+                <h4 class="test-name">{{ test.testName }}</h4>
+                <p class="test-meta">📅 {{ test.date }} &nbsp; ⏰ {{ test.time }}</p>
+                <p *ngIf="test.notes" class="test-notes">📝 {{ test.notes }}</p>
+              </div>
+            </div>
+            <ion-badge [color]="getStatusColor(test.status)">
+              {{ test.status | titlecase }}
+            </ion-badge>
+          </div>
+          <div *ngIf="test.result" class="result-box">
+            <p class="result-text"><strong>🧪 Result:</strong> {{ test.result }}</p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <div *ngIf="userProfile?.role === 'laboratory' || userProfile?.role === 'admin'">
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <h3 class="stat-value stat-primary">{{ allLabTests.length }}</h3>
+        <p class="stat-label">Total</p>
+      </div>
+      <div class="stat-card">
+        <h3 class="stat-value stat-warning">{{ allLabTests | testFilter: 'pending' }}</h3>
+        <p class="stat-label">Pending</p>
+      </div>
+      <div class="stat-card">
+        <h3 class="stat-value stat-success">{{ allLabTests | testFilter: 'completed' }}</h3>
+        <p class="stat-label">Completed</p>
+      </div>
+    </div>
+
+    <div class="filter-chips">
+      <ion-chip [color]="filterStatus === 'all'        ? 'primary' : 'medium'"
+        (click)="filterStatus = 'all'">All</ion-chip>
+      <ion-chip [color]="filterStatus === 'pending'    ? 'warning' : 'medium'"
+        (click)="filterStatus = 'pending'">Pending</ion-chip>
+      <ion-chip [color]="filterStatus === 'processing' ? 'primary' : 'medium'"
+        (click)="filterStatus = 'processing'">Processing</ion-chip>
+      <ion-chip [color]="filterStatus === 'completed'  ? 'success' : 'medium'"
+        (click)="filterStatus = 'completed'">Completed</ion-chip>
+    </div>
+
+    <div *ngIf="filteredTests.length === 0" class="empty-state ion-text-center ion-padding">
+      <ion-icon name="flask-outline" class="empty-state-icon"></ion-icon>
+      <p class="empty-state-text">No lab test requests found</p>
+    </div>
+
+    <ion-card *ngFor="let test of filteredTests" class="ion-margin-top">
+      <ion-card-content>
+        <div class="test-card-row">
+          <div>
+            <h4 class="test-name">{{ test.testName }}</h4>
+            <p class="test-meta">👤 {{ test.patientName }}</p>
+            <p class="test-meta">📅 {{ test.date }} &nbsp; ⏰ {{ test.time }}</p>
+            <p *ngIf="test.notes" class="test-notes">📝 {{ test.notes }}</p>
+          </div>
+          <ion-badge [color]="getStatusColor(test.status)">
+            {{ test.status | titlecase }}
+          </ion-badge>
+        </div>
+
+        <div *ngIf="test.result" class="result-box">
+          <p class="result-text"><strong>Result:</strong> {{ test.result }}</p>
+        </div>
+
+        <div class="action-buttons" *ngIf="userProfile?.role === 'laboratory'">
+          <ion-button size="small" color="primary" *ngIf="test.status === 'pending'" (click)="startProcessing(test.id)">
+            <ion-icon name="play-outline" slot="start"></ion-icon>
+            Start Processing
+          </ion-button>
+          <ion-button size="small" color="success" *ngIf="test.status === 'processing'" (click)="openEdit(test)">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            Add Result
+          </ion-button>
+          <ion-button size="small" color="warning" fill="outline" *ngIf="test.result" (click)="openEdit(test)">
+            <ion-icon name="pencil-outline" slot="start"></ion-icon>
+            Edit Result
+          </ion-button>
+          <ion-button size="small" color="danger" fill="outline"
+            *ngIf="test.status !== 'cancelled' && test.status !== 'completed'" (click)="cancelTest(test.id)">
+            Cancel
+          </ion-button>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+</ion-content>
+
+<ion-modal [isOpen]="!!editingTest" (didDismiss)="closeEdit()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Add / Edit Result</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeEdit()">
+            <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding" *ngIf="editingTest">
+
+      <ion-card>
+        <ion-card-content>
+          <p><strong>Test:</strong> {{ editingTest.testName }}</p>
+          <p><strong>Patient:</strong> {{ editingTest.patientName }}</p>
+          <p>📅 {{ editingTest.date }} &nbsp; ⏰ {{ editingTest.time }}</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-item>
+        <ion-label position="stacked">Update Status</ion-label>
+        <ion-select [(ngModel)]="updatingStatus" interface="action-sheet">
+          <ion-select-option value="processing">Processing</ion-select-option>
+          <ion-select-option value="completed">Completed</ion-select-option>
+          <ion-select-option value="cancelled">Cancelled</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Test Result</ion-label>
+        <ion-textarea [(ngModel)]="resultText" rows="4" placeholder="Enter test result details here...">
+        </ion-textarea>
+      </ion-item>
+
+      <ion-button expand="block" class="ion-margin-top" (click)="saveResult()">
+        <ion-icon name="save-outline" slot="start"></ion-icon>
+        Save Result
+      </ion-button>
+
+    </ion-content>
+  </ng-template>
+</ion-modal>

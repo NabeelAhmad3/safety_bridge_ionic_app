@@ -17,7 +17,7 @@ export class FirestoreService {
     return collectionData(q, { idField: 'id' });
   }
 
-   getDoctors(): Observable<any[]> {
+  getDoctors(): Observable<any[]> {
     const ref = collection(this.firestore, 'users');
     const q = query(ref, where('role', '==', 'doctor'));
     return collectionData(q, { idField: 'id' }).pipe(
@@ -93,39 +93,85 @@ export class FirestoreService {
     const ref = doc(this.firestore, 'appointments', appointmentId);
     return updateDoc(ref, data);
   }
-async checkAppointmentConflict(doctorId: string, date: string, time: string): Promise<boolean> {
-  const ref = collection(this.firestore, 'appointments');
-  const q = query(ref,
-    where('doctorId', '==', doctorId),
-    where('date', '==', date),
-    where('status', '!=', 'cancelled')
-  );
+  async checkAppointmentConflict(doctorId: string, date: string, time: string): Promise<boolean> {
+    const ref = collection(this.firestore, 'appointments');
+    const q = query(ref,
+      where('doctorId', '==', doctorId),
+      where('date', '==', date),
+      where('status', '!=', 'cancelled')
+    );
 
-  const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
 
-  const [bookedHour, bookedMin] = time.split(':').map(Number);
-  const bookedTotalMins = bookedHour * 60 + bookedMin;
+    const [bookedHour, bookedMin] = time.split(':').map(Number);
+    const bookedTotalMins = bookedHour * 60 + bookedMin;
 
-  for (const docSnap of snapshot.docs) {
-    const data = docSnap.data();
-    const [existingHour, existingMin] = data['time'].split(':').map(Number);
-    const existingTotalMins = existingHour * 60 + existingMin;
-    const diff = Math.abs(bookedTotalMins - existingTotalMins);
-    if (diff < 20) {
-      return true;
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      const [existingHour, existingMin] = data['time'].split(':').map(Number);
+      const existingTotalMins = existingHour * 60 + existingMin;
+      const diff = Math.abs(bookedTotalMins - existingTotalMins);
+      if (diff < 20) {
+        return true;
+      }
     }
+    return false;
   }
-  return false;
-}
 
-async getBookedSlots(doctorId: string, date: string, allSlots: string[]): Promise<string[]> {
-  const bookedSlots: string[] = [];
-  for (const slot of allSlots) {
-    const conflict = await this.checkAppointmentConflict(doctorId, date, slot);
-    if (conflict) {
-      bookedSlots.push(slot);
+  async getBookedSlots(doctorId: string, date: string, allSlots: string[]): Promise<string[]> {
+    const bookedSlots: string[] = [];
+    for (const slot of allSlots) {
+      const conflict = await this.checkAppointmentConflict(doctorId, date, slot);
+      if (conflict) {
+        bookedSlots.push(slot);
+      }
     }
+    return bookedSlots;
   }
-  return bookedSlots;
-}
+  async deleteLabTest(testId: string, userRole: string): Promise<void> {
+    if (userRole !== 'admin') throw new Error('Only admin can delete lab tests');
+    const ref = doc(this.firestore, 'labTests', testId);
+    await deleteDoc(ref);
+  }
+  bookLabTest(data: {
+    patientId: string;
+    patientName: string;
+    testName: string;
+    date: string;
+    time: string;
+    notes: string;
+    status: string;
+  }) {
+    return addDoc(collection(this.firestore, 'labTests'), {
+      ...data,
+      createdAt: new Date()
+    });
+  }
+
+  getPatientLabTests(patientId: string): Observable<any[]> {
+    const ref = collection(this.firestore, 'labTests');
+    const q = query(ref, where('patientId', '==', patientId));
+    return collectionData(q, { idField: 'id' });
+  }
+
+  getAllLabTests(): Observable<any[]> {
+    const ref = collection(this.firestore, 'labTests');
+    return collectionData(ref, { idField: 'id' });
+  }
+
+  async updateLabTestStatus(
+    testId: string,
+    status: string,
+    result?: string
+  ): Promise<void> {
+    if (!testId) {
+      throw new Error('Test ID is required');
+    }
+    const ref = doc(this.firestore, 'labTests', testId);
+    await updateDoc(ref, {
+      status,
+      ...(result ? { result } : {}),
+      updatedAt: new Date()
+    });
+  }
 }

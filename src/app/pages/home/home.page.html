@@ -14,9 +14,11 @@
   <div class="welcome-banner">
     <div class="welcome-text">
       <h2>Hello, {{ profile?.name?.split(' ')[0] || 'User' }} 👋</h2>
-      <p>How are you feeling today?</p>
+      <p *ngIf="profile?.role !== 'laboratory'">How are you feeling today?</p>
+      <p *ngIf="profile?.role === 'laboratory'">Manage patient lab requests</p>
     </div>
-    <ion-icon name="medkit" class="banner-icon"></ion-icon>
+    <ion-icon [name]="profile?.role === 'laboratory' ? 'flask' : 'medkit'" class="banner-icon">
+    </ion-icon>
   </div>
 
   <div class="ion-padding-horizontal ion-padding-top" *ngIf="profile?.role === 'patient'">
@@ -26,35 +28,46 @@
   </div>
 
   <div class="ion-padding-horizontal" *ngIf="isSearching">
-
     <div *ngIf="filteredSpecialists.length === 0" style="text-align:center; padding: 20px">
       <ion-icon name="search-outline" style="font-size:40px; color:#ccc"></ion-icon>
       <p style="color:gray">No specialists found for "{{ searchQuery }}"</p>
     </div>
-
     <ion-card *ngFor="let s of filteredSpecialists" class="ion-margin-top">
       <ion-card-content>
         <div style="display:flex; align-items:center; gap:12px">
-          <ion-icon [name]="getRoleIcon(s.role)" style="font-size: 40px" [color]="getRoleColor(s.role)">
-          </ion-icon>
+          <ion-icon [name]="getRoleIcon(s.role)" style="font-size: 40px" [color]="getRoleColor(s.role)"></ion-icon>
           <div style="flex:1">
             <h4 style="margin:0; font-weight:bold">{{ s.name }}</h4>
             <p style="margin:2px 0; color:gray; font-size:13px">
               {{ s.specialization || s.roleLabel }}
             </p>
-            <ion-badge [color]="getRoleColor(s.role)">
-              {{ s.roleLabel }}
-            </ion-badge>
+            <ion-badge [color]="getRoleColor(s.role)">{{ s.roleLabel }}</ion-badge>
           </div>
-          <ion-button size="small" (click)="bookSpecialist(s)">
-            Book
-          </ion-button>
+          <ion-button size="small" (click)="bookSpecialist(s)">Book</ion-button>
         </div>
       </ion-card-content>
     </ion-card>
   </div>
 
-  <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching">
+  <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching && profile?.role === 'laboratory'">
+    <div class="stat-card pending">
+      <ion-icon name="time-outline"></ion-icon>
+      <h3>{{ labPendingCount }}</h3>
+      <p>Pending</p>
+    </div>
+    <div class="stat-card completed">
+      <ion-icon name="reload-outline"></ion-icon>
+      <h3>{{ labProcessingCount }}</h3>
+      <p>Processing</p>
+    </div>
+    <div class="stat-card upcoming">
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <h3>{{ labCompletedCount }}</h3>
+      <p>Completed</p>
+    </div>
+  </div>
+
+  <div class="stats-row ion-padding-horizontal" *ngIf="!isSearching && profile?.role !== 'laboratory'">
     <div class="stat-card pending">
       <ion-icon name="time-outline"></ion-icon>
       <h3>{{ pendingCount }}</h3>
@@ -84,7 +97,40 @@
     </div>
   </div>
 
-  <div *ngIf="!isSearching">
+  <div *ngIf="!isSearching && profile?.role === 'laboratory'">
+    <div class="section-title ion-padding-horizontal">Recent Lab Requests</div>
+
+    <div class="ion-padding-horizontal" *ngIf="recentLabTests.length === 0">
+      <ion-card>
+        <ion-card-content class="ion-text-center">
+          <ion-icon name="flask-outline" style="font-size:40px; color:#ccc"></ion-icon>
+          <p>No lab test requests yet.</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <div class="ion-padding-horizontal">
+      <ion-card class="appt-card" *ngFor="let test of recentLabTests" routerLink="/lab">
+        <ion-card-content>
+          <div class="appt-row">
+            <div>
+              <ion-icon name="flask" color="tertiary" class="appt-avatar"></ion-icon>
+            </div>
+            <div class="appt-info">
+              <h4>{{ test.testName }}</h4>
+              <p>👤 {{ test.patientName }}</p>
+              <p>📅 {{ test.date }} &nbsp; ⏰ {{ test.time }}</p>
+            </div>
+            <ion-badge [color]="getStatusColor(test.status)">
+              {{ test.status | titlecase }}
+            </ion-badge>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <div *ngIf="!isSearching && profile?.role !== 'laboratory'">
     <div class="section-title ion-padding-horizontal">Recent Appointments</div>
 
     <div class="ion-padding-horizontal" *ngIf="appointments.length === 0">
@@ -100,7 +146,7 @@
     </div>
 
     <div class="ion-padding-horizontal">
-      <ion-card class="appt-card" *ngFor="let appt of appointments">
+      <ion-card class="appt-card" *ngFor="let appt of appointments" routerLink="/appointments">
         <ion-card-content>
           <div class="appt-row">
             <div>
@@ -122,20 +168,65 @@
       </ion-card>
     </div>
   </div>
-  <div *ngIf="!isSearching">
+  
+  <!-- ── RECENT LAB TESTS (patients only) ── -->
+  <div *ngIf="!isSearching && profile?.role === 'patient'">
+    <div class="section-title ion-padding-horizontal">
+      My Lab Tests
+      <ion-button size="small" fill="clear" routerLink="/lab" style="float:right; font-size:12px">
+        View All
+      </ion-button>
+    </div>
+
+    <div class="ion-padding-horizontal" *ngIf="patientLabTests.length === 0">
+      <ion-card>
+        <ion-card-content class="ion-text-center">
+          <ion-icon name="flask-outline" style="font-size:40px; color:#ccc"></ion-icon>
+          <p>No lab tests booked yet.</p>
+          <ion-button size="small" routerLink="/lab">
+            Book a Lab Test
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
 
     <div class="ion-padding-horizontal">
-      <div class="tips-scroll" #tipsContainer (touchstart)="stopAutoScroll()" (touchend)="startAutoScroll()">
-        <ion-card class="appt-card tip-card" *ngFor="let h of healthTips">
-          <ion-card-content>
-            {{ h.tip }}
-          </ion-card-content>
-        </ion-card>
+      <ion-card class="appt-card" *ngFor="let test of patientLabTests" routerLink="/lab">
+        <ion-card-content>
+          <div class="appt-row">
+            <div>
+              <ion-icon name="flask" color="tertiary" class="appt-avatar"></ion-icon>
+            </div>
+            <div class="appt-info">
+              <h4>{{ test.testName }}</h4>
+              <p>📅 {{ test.date }} &nbsp; ⏰ {{ test.time }}</p>
+              <p *ngIf="test.notes" style="font-size:12px; color:gray">
+                📝 {{ test.notes }}
+              </p>
+            </div>
+            <ion-badge [color]="getStatusColor(test.status)">
+              {{ test.status | titlecase }}
+            </ion-badge>
+          </div>
+          <!-- Show result if completed -->
+          <div *ngIf="test.result" style="margin-top:8px; padding:8px; background:#f0f9f0;
+                    border-radius:8px; border-left:4px solid #2dd36f">
+            <p style="margin:0; font-size:12px">
+              <strong>🧪 Result:</strong> {{ test.result }}
+            </p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+  <div *ngIf="!isSearching">
+    <div class="section-title ion-padding-horizontal">Health Tips</div>
+    <div class="tips-scroll ion-padding-horizontal" #tipsContainer>
+      <div class="tip-card" *ngFor="let h of healthTips">
+        {{ h.tip }}
       </div>
     </div>
-    
   </div>
-
 
   <div style="height: 30px"></div>
 

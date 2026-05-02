@@ -24,12 +24,23 @@ export class AdminPage implements OnInit {
   adminRole = 'admin';
   adminProfile: any = null;
   nurses: any[] = [];
+  labTests: any[] = [];
+  editingLabTest: any = null;
+  updatingLabStatus = '';
+  updatingLabResult = '';
 
   get totalAppointments() { return this.allAppointments.length; }
   get pendingCount() { return this.allAppointments.filter(a => a.status === 'pending').length; }
   get confirmedCount() { return this.allAppointments.filter(a => a.status === 'confirmed').length; }
   get completedCount() { return this.allAppointments.filter(a => a.status === 'completed').length; }
+
   get allStaff() { return [...this.doctors, ...this.physiotherapists, ...this.nurses]; }
+
+  get totalLabTestsCount() { return this.labTests.length; }
+  get pendingLabTests() { return this.labTests.filter(t => t.status === 'pending').length; }
+  get processingLabTests() { return this.labTests.filter(t => t.status === 'processing').length }
+  get completedLabTests() { return this.labTests.filter(t => t.status === 'completed').length; }
+
 
   constructor(private fs: FirestoreService, private authService: AuthService) { }
 
@@ -46,7 +57,8 @@ export class AdminPage implements OnInit {
     this.fs.getUsersByRole('patient').subscribe(p => this.patients = p);
     this.fs.getUsersByRole('doctor').subscribe(d => this.doctors = d);
     this.fs.getUsersByRole('physiotherapist').subscribe(p => this.physiotherapists = p);
-    this.fs.getUsersByRole('nurse').subscribe(n => this.nurses = n)
+    this.fs.getUsersByRole('nurse').subscribe(n => this.nurses = n);
+    this.fs.getAllLabTests().subscribe(t => this.labTests = t);
   }
 
   openEdit(appt: any) {
@@ -108,7 +120,7 @@ export class AdminPage implements OnInit {
     }
   }
 
- getRoleIcon(role: string) {
+  getRoleIcon(role: string) {
     switch (role) {
       case 'doctor': return 'medkit';
       case 'physiotherapist': return 'fitness';
@@ -129,4 +141,43 @@ export class AdminPage implements OnInit {
     await this.authService.logout();
   }
 
+
+
+  openEditLabTest(test: any) {
+    this.editingLabTest = { ...test };
+    this.updatingLabStatus = test.status;
+    this.updatingLabResult = test.result || '';
+  }
+
+  closeEditLabTest() {
+    this.editingLabTest = null;
+    this.updatingLabStatus = '';
+    this.updatingLabResult = '';
+  }
+
+  async saveLabEdit() {
+    if (!this.editingLabTest) return;
+    try {
+      await this.fs.updateLabTestStatus(
+        this.editingLabTest.id,
+        this.updatingLabStatus,
+        this.updatingLabResult
+      );
+      this.closeEditLabTest();
+    } catch (e) {
+      console.error('❌ Lab update failed:', e);
+    }
+  }
+
+  async deleteLabTest(id: string) {
+    if (!id) return;
+    if (confirm('Delete this lab test?')) {
+      try {
+        await this.fs.deleteLabTest(id, this.adminRole);
+        console.log('✅ Lab test deleted');
+      } catch (e) {
+        console.error('❌ Delete failed:', e);
+      }
+    }
+  }
 }

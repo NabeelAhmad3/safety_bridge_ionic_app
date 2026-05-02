@@ -34,7 +34,10 @@ import {
   personAddOutline,
   heart,
   time,
-  lockClosed
+  lockClosed,
+  flask,
+  reloadOutline,
+  flaskOutline
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -79,5 +82,8 @@ addIcons({
   'person-add-outline':personAddOutline,
   'heart':heart,
   'time':time,
-  'lock-closed':lockClosed
+  'lock-closed':lockClosed,
+  'flask':flask,
+  'reload-outline':reloadOutline,
+  'flask-outline':flaskOutline
 });

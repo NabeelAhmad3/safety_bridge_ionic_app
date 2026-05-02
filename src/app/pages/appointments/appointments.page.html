@@ -24,13 +24,13 @@
 
       <ion-item>
         <ion-label position="floating">Select Date</ion-label>
-        <ion-input [(ngModel)]="date" type="date" (ionChange)="onDateTimeChange()">
+        <ion-input [(ngModel)]="date" type="date" (ngModelChange)="onDateTimeChange()">
         </ion-input>
       </ion-item>
 
       <ion-item>
         <ion-label position="floating">Select Time</ion-label>
-        <ion-input [(ngModel)]="time" type="time" (ionChange)="onDateTimeChange()">
+        <ion-input [(ngModel)]="time" type="time" (ngModelChange)="onDateTimeChange()">
         </ion-input>
       </ion-item>
 

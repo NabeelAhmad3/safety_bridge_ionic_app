@@ -47,7 +47,7 @@
 
         <div class="empty-messages" *ngIf="messages.length === 0">
           <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
-          <p>No messages yet. Say hello! 👋</p>
+          <p>No messages yet. Say hello!</p>
         </div>
 
         <div *ngFor="let msg of messages" class="message-wrapper" [class.my-message]="isMyMessage(msg)"

@@ -48,7 +48,7 @@ export class WelcomePage {
     {
       icon: 'chatbubble-ellipses',
       color: 'secondary',
-      title: 'Virtual Assistance',
+      title: 'Online Consultation',
         desc: 'Chat directly with your doctor or specialist in real time'
     },
   ];

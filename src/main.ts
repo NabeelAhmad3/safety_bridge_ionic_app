@@ -55,7 +55,8 @@ import {
   peopleOutline,
   chatbubbleOutline,
   send,
-  happyOutline
+  happyOutline,
+  bag
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -121,5 +122,6 @@ addIcons({
   'people-outline':peopleOutline,
   'chatbubble-outline':chatbubbleOutline,
   'send':send,
-  'happy-outline':happyOutline
+  'happy-outline':happyOutline,
+  'bag':bag
 });

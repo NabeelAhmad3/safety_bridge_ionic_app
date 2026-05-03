@@ -21,8 +21,6 @@ export class ChatPage implements OnInit, OnDestroy {
   profile: any = null;
   currentUser: any = null;
   isLoading = true;
-
-  // Conversation list view
   activeTab = 'conversations';
   conversations: any[] = [];
   specialists: any[] = [];

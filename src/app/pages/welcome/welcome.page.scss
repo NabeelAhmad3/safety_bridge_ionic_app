@@ -345,3 +345,31 @@
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+.about-features-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: gray;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 12px 12px;
+}
+
+.about-stats {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  padding: 8px 0;
+
+  h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+  }
+
+  p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: gray;
+  }
+}

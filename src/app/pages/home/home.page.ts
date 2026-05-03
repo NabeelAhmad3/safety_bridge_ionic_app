@@ -33,19 +33,20 @@ export class HomePage implements OnInit, AfterViewInit, OnDestroy {
   labProcessingCount = 0;
   labCompletedCount = 0;
   patientLabTests: any[] = [];
-  labPatientproccessingCount =0;
+  labPatientproccessingCount = 0;
   labPatientCompletedCount = 0;
   medicineOrders: any[] = [];
   medicinePendingCount = 0;
   medicineCompletedCount = 0;
   patientMedicineOrders: any[] = [];
   patientMedicinePendingCount = 0;
-   patientMedicineProccessingCount = 0;
+  patientMedicineProccessingCount = 0;
   patientMedicineCompletedCount = 0;
 
 
   allQuickActions = [
     { title: 'Find Specialists', icon: 'medical', route: '/doctors', color: 'primary', roles: ['patient'] },
+    { title: 'Messages', icon: 'chatbubble-ellipses', route: '/chat', color: 'success', roles: ['patient', 'doctor', 'physiotherapist', 'nurse'] },
     { title: 'Book Lab Test', icon: 'flask', route: '/lab', color: 'tertiary', roles: ['patient'] },
     { title: 'Order Medicine', icon: 'medkit', route: '/medicine', color: 'success', roles: ['patient'] },
     { title: 'Medical Records', icon: 'document-text', route: '/medical-records', color: 'warning', roles: ['doctor', 'physiotherapist', 'nurse', 'patient'] },

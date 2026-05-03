@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, getDocs, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, collectionData, query, where, doc, updateDoc, getDocs, deleteDoc, setDoc } from '@angular/fire/firestore';
 import { map, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -255,8 +255,68 @@ export class FirestoreService {
   deleteMedicalRecord(id: string) {
     return deleteDoc(doc(this.firestore, 'medicalRecords', id));
   }
-  
+
   deleteMedicineOrder(id: string) {
     return deleteDoc(doc(this.firestore, 'medicineOrders', id));
+  }
+  getChatId(uid1: string, uid2: string): string {
+    return [uid1, uid2].sort().join('_');
+  }
+
+  sendMessage(chatId: string, message: any) {
+    return addDoc(
+      collection(this.firestore, 'chats', chatId, 'messages'),
+      { ...message, createdAt: new Date() }
+    );
+  }
+
+  getMessages(chatId: string): Observable<any[]> {
+    return collectionData(
+      collection(this.firestore, 'chats', chatId, 'messages'),
+      { idField: 'id' }
+    ).pipe(
+      map((msgs: any[]) => msgs.sort((a, b) => {
+        const dA = a.createdAt?.toDate?.() || new Date(0);
+        const dB = b.createdAt?.toDate?.() || new Date(0);
+        return dA.getTime() - dB.getTime();
+      }))
+    ) as Observable<any[]>;
+  }
+
+  getUserChats(uid: string): Observable<any[]> {
+    return collectionData(
+      collection(this.firestore, 'chats'),
+      { idField: 'id' }
+    ).pipe(
+      map((chats: any[]) => chats.filter(c => c.id.includes(uid)))
+    ) as Observable<any[]>;
+  }
+
+  async createOrGetChat(currentUser: any, specialist: any) {
+    const chatId = this.getChatId(currentUser.uid, specialist.uid || specialist.id);
+    const chatRef = doc(this.firestore, 'chats', chatId);
+    await setDoc(chatRef, {
+      participants: [currentUser.uid, specialist.uid || specialist.id],
+      participantNames: {
+        [currentUser.uid]: currentUser.name,
+        [specialist.uid || specialist.id]: specialist.name
+      },
+      participantRoles: {
+        [currentUser.uid]: currentUser.role,
+        [specialist.uid || specialist.id]: specialist.role
+      },
+      lastMessage: '',
+      lastMessageTime: new Date(),
+      updatedAt: new Date()
+    }, { merge: true });
+    return chatId;
+  }
+
+  async updateLastMessage(chatId: string, message: string) {
+    return updateDoc(doc(this.firestore, 'chats', chatId), {
+      lastMessage: message,
+      lastMessageTime: new Date(),
+      updatedAt: new Date()
+    });
   }
 }

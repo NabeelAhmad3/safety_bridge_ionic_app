@@ -1,0 +1,159 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-button *ngIf="activeChatId" (click)="closeChat()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+      <ion-back-button *ngIf="!activeChatId" defaultHref="/home"></ion-back-button>
+    </ion-buttons>
+
+    <ion-title *ngIf="!activeChatId">Messages</ion-title>
+
+    <ion-title *ngIf="activeChatId">
+      <div class="chat-header-title">
+        <span>{{ activeChatPartner?.name }}</span>
+        <ion-badge [color]="getRoleColor(activeChatPartner?.role)" class="header-role-badge">
+          {{ getRoleLabel(activeChatPartner?.role) }}
+        </ion-badge>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+
+  <ion-toolbar *ngIf="!activeChatId && isPatient">
+    <ion-segment [(ngModel)]="activeTab">
+      <ion-segment-button value="conversations">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+        <ion-label>Chats</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="new">
+        <ion-icon name="add-circle-outline"></ion-icon>
+        <ion-label>New Chat</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+
+    <div *ngIf="activeChatId" class="chat-view">
+
+      <div class="messages-container">
+
+        <div class="empty-messages" *ngIf="messages.length === 0">
+          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+          <p>No messages yet. Say hello! 👋</p>
+        </div>
+
+        <div *ngFor="let msg of messages" class="message-wrapper" [class.my-message]="isMyMessage(msg)"
+          [class.their-message]="!isMyMessage(msg)">
+
+          <div class="message-bubble" [class.my-bubble]="isMyMessage(msg)" [class.their-bubble]="!isMyMessage(msg)">
+            <p class="sender-name" *ngIf="!isMyMessage(msg)">{{ msg.senderName }}</p>
+            <p class="message-text">{{ msg.text }}</p>
+            <p class="message-time">{{ formatTime(msg.createdAt) }}</p>
+          </div>
+
+        </div>
+
+        <div #messagesEnd></div>
+      </div>
+
+      <div class="message-input-bar">
+        <div class="emoji-picker-container" *ngIf="showEmojiPicker">
+          <div class="emoji-grid">
+            <span *ngFor="let emoji of emojis" class="emoji-item" (click)="addEmoji(emoji)">
+              {{ emoji }}
+            </span>
+          </div>
+        </div>
+
+        <ion-button fill="clear" color="medium" (click)="showEmojiPicker = !showEmojiPicker" class="emoji-btn">
+          <ion-icon name="happy-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+
+        <ion-textarea [(ngModel)]="newMessage" placeholder="Type a message..." rows="1" auto-grow="true"
+          (keydown)="onEnterKey($event)" class="message-input">
+        </ion-textarea>
+
+        <ion-button fill="clear" color="primary" [disabled]="!newMessage.trim() || isSending" (click)="sendMessage()"
+          class="send-btn">
+          <ion-icon name="send" slot="icon-only"></ion-icon>
+        </ion-button>
+
+        <div class="emoji-backdrop" *ngIf="showEmojiPicker" (click)="showEmojiPicker = false"></div>
+      </div>
+    </div>
+
+    <div *ngIf="!activeChatId && activeTab === 'conversations'">
+
+      <div class="empty-state" *ngIf="conversations.length === 0">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+        <p>No conversations yet.</p>
+        <p class="text-gray small" *ngIf="isPatient">Start a new chat with a specialist.</p>
+      </div>
+
+      <ion-list *ngIf="conversations.length > 0" lines="full">
+        <ion-item *ngFor="let chat of conversations" (click)="openChatById(chat.id)" button detail="true">
+          <div slot="start" class="conv-avatar">
+            <ion-icon [name]="getRoleIcon(getPartnerRole(chat))" [color]="getRoleColor(getPartnerRole(chat))">
+            </ion-icon>
+          </div>
+          <ion-label>
+            <h3>{{ getPartnerName(chat) }}</h3>
+            <p class="conv-role">
+              <ion-badge [color]="getRoleColor(getPartnerRole(chat))" class="conv-role-badge">
+                {{ getRoleLabel(getPartnerRole(chat)) }}
+              </ion-badge>
+            </p>
+            <p class="conv-last-msg">{{ chat.lastMessage || 'No messages yet' }}</p>
+          </ion-label>
+          <div slot="end" class="conv-time">
+            <span>{{ formatLastMessageTime(chat.lastMessageTime) }}</span>
+          </div>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <div *ngIf="!activeChatId && activeTab === 'new' && isPatient">
+
+      <div class="ion-padding-horizontal ion-padding-top">
+        <ion-searchbar [(ngModel)]="specialistSearch" (ionInput)="onSpecialistSearch()"
+          placeholder="Search doctors, nurses, physiotherapists..." animated="true">
+        </ion-searchbar>
+      </div>
+
+      <div class="empty-state" *ngIf="filteredSpecialists.length === 0">
+        <ion-icon name="people-outline"></ion-icon>
+        <p>No specialists found.</p>
+      </div>
+
+      <ion-list lines="full">
+        <ion-item *ngFor="let s of filteredSpecialists" (click)="startChat(s)" button detail="true">
+          <div slot="start" class="conv-avatar">
+            <ion-icon [name]="getRoleIcon(s.role)" [color]="getRoleColor(s.role)"></ion-icon>
+          </div>
+          <ion-label>
+            <h3>{{ s.name }}</h3>
+            <p *ngIf="s.specialization">🩺 {{ s.specialization }}</p>
+            <ion-badge [color]="getRoleColor(s.role)" class="conv-role-badge">
+              {{ s.roleLabel }}
+            </ion-badge>
+          </ion-label>
+          <ion-button slot="end" size="small" fill="outline" color="primary">
+            <ion-icon name="chatbubble-outline" slot="start"></ion-icon>
+            Chat
+          </ion-button>
+        </ion-item>
+      </ion-list>
+    </div>
+
+  </ng-container>
+
+  <div class="bottom-spacer"></div>
+</ion-content>

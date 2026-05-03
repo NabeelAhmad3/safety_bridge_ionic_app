@@ -46,25 +46,31 @@ export const routes: Routes = [
   },
   {
     path: 'welcome',
-    loadComponent: () => import('./pages/welcome/welcome.page').then( m => m.WelcomePage)
+    loadComponent: () => import('./pages/welcome/welcome.page').then(m => m.WelcomePage)
   },
   {
     path: 'lab',
-    loadComponent: () => import('./pages/lab-tests/lab-tests.page').then( m => m.LabTestsPage),
-    canActivate:[authGuard]
+    loadComponent: () => import('./pages/lab-tests/lab-tests.page').then(m => m.LabTestsPage),
+    canActivate: [authGuard]
   },
   {
     path: 'medicine',
-    loadComponent: () => import('./pages/medicines/medicines.page').then( m => m.MedicinesPage),
-    canActivate:[authGuard]
+    loadComponent: () => import('./pages/medicines/medicines.page').then(m => m.MedicinesPage),
+    canActivate: [authGuard]
   },
   {
     path: 'medical-records',
-    loadComponent: () => import('./pages/medical-records/medical-records.page').then( m => m.MedicalRecordsPage),
-    canActivate:[authGuard]
+    loadComponent: () => import('./pages/medical-records/medical-records.page').then(m => m.MedicalRecordsPage),
+    canActivate: [authGuard]
   },
-
-
-
-
+  {
+    path: 'chat',
+    loadComponent: () => import('./pages/chat/chat.page').then(m => m.ChatPage),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'chat/:chatId',
+    loadComponent: () => import('./pages/chat/chat.page').then(m => m.ChatPage),
+    canActivate: [authGuard]
+  },
 ];

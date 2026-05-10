@@ -25,7 +25,8 @@ import {
   bagCheckOutline, createOutline, documentText, documentTextOutline,
   eyeOutline, chatbubbleEllipses, chatbubbleEllipsesOutline,
   chatbubblesOutline, arrowBackOutline, peopleOutline,
-  chatbubbleOutline, send, happyOutline, bag
+  chatbubbleOutline, send, happyOutline, bag,
+  chevronForwardOutline
 } from 'ionicons/icons';
 
 bootstrapApplication(AppComponent, {
@@ -92,5 +93,6 @@ addIcons({
   'chatbubble-outline': chatbubbleOutline,
   'send': send,
   'happy-outline': happyOutline,
-  'bag': bag
+  'bag': bag,
+  'chevron-forward-outline':chevronForwardOutline
 });
